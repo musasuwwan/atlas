@@ -69,6 +69,20 @@ def handle_commit() -> str:
     return result
 
 
+def handle_deploy() -> str:
+    print("\nATLAS: Deploy current directory to Cloudflare Pages?")
+    speak("Deploy to Cloudflare?")
+
+    try:
+        confirmation = input("Confirm deploy? (yes/no): ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        return "Deployment cancelled."
+
+    if confirmation in {"yes", "y"}:
+        return execute_deploy()
+    return "Deployment cancelled."
+
+
 def main() -> None:
     print("ATLAS online. Type 'quit' or 'exit' to stop.")
     while True:
@@ -90,7 +104,7 @@ def main() -> None:
             if command == "commit":
                 reply = handle_commit()
             elif command == "deploy":
-                reply = execute_deploy()
+                reply = handle_deploy()
             elif command == "status":
                 reply = execute_status()
             else:

@@ -1,6 +1,8 @@
 import re
 import subprocess
 import os
+import json
+from datetime import datetime
 from dotenv import load_dotenv
 from anthropic import Anthropic
 
@@ -83,8 +85,97 @@ def confirm_and_push(commit_msg: str) -> str:
 
 
 def execute_deploy() -> str:
-    return "Not implemented yet — coming in Phase 2 Part 2."
+    cwd = os.getcwd()
+    try:
+        project_name = input("Enter project name for deployment (e.g., 'atlas-demo'): ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return "Deployment cancelled."
+
+    if not project_name:
+        return "No project name provided. Deployment cancelled."
+
+    wrangler_cmd = "C:\\Users\\musam\\AppData\\Roaming\\npm\\wrangler.cmd"
+    if not os.path.exists(wrangler_cmd):
+        wrangler_cmd = "wrangler"
+
+    try:
+        subprocess.run(
+            [wrangler_cmd, "pages", "project", "create", project_name],
+            input="main\n",
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+        )
+    except FileNotFoundError:
+        return "Wrangler CLI not found. Install with: npm install -g wrangler"
+
+    try:
+        result = subprocess.run(
+            [wrangler_cmd, "pages", "deploy", cwd, "--project-name=" + project_name],
+            capture_output=True,
+            text=True,
+            encoding='utf-8',
+            errors='replace',
+        )
+    except FileNotFoundError:
+        return "Wrangler CLI not found. Install with: npm install -g wrangler"
+
+    if result.returncode != 0:
+        error = result.stderr.strip() or result.stdout.strip()
+        return f"Deployment failed: {error}"
+
+    output = result.stdout + result.stderr
+    url_match = re.search(r"https://[\w\-]+\.pages\.dev\S*", output)
+    url = url_match.group(0).rstrip(".") if url_match else f"https://{project_name}.pages.dev"
+
+    deploy_record = {
+        "project": project_name,
+        "url": url,
+        "timestamp": datetime.now().isoformat(),
+    }
+    deploy_file = os.path.join(os.getcwd(), ".atlas_last_deploy")
+    try:
+        with open(deploy_file, "w") as f:
+            json.dump(deploy_record, f)
+    except OSError:
+        pass
+
+    return f"Deployed successfully. Live at {url}"
 
 
 def execute_status() -> str:
-    return "Not implemented yet — coming in Phase 2 Part 3."
+    branch = _run(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+    if branch.returncode != 0:
+        return "Git error: not a git repository."
+
+    branch_name = branch.stdout.strip()
+
+    porcelain = _run(["git", "status", "--porcelain"])
+    change_count = len([l for l in porcelain.stdout.splitlines() if l.strip()])
+
+    last_commit = _run(["git", "log", "-1", "--pretty=%B"])
+    last_commit_msg = last_commit.stdout.strip() or "No commits yet"
+
+    deploy_file = os.path.join(os.getcwd(), ".atlas_last_deploy")
+    if os.path.exists(deploy_file):
+        try:
+            with open(deploy_file) as f:
+                record = json.load(f)
+            cf_lines = (
+                f"- Last deployment: {record.get('project', 'unknown')}\n"
+                f"  - URL: {record.get('url', 'unknown')}"
+            )
+        except (OSError, json.JSONDecodeError):
+            cf_lines = "- Last deployment: error reading deploy file"
+    else:
+        cf_lines = "- Last deployment: No deployments yet"
+
+    return (
+        f"Git Status:\n"
+        f"- Branch: {branch_name}\n"
+        f"- Uncommitted changes: {change_count} file{'s' if change_count != 1 else ''}\n"
+        f"- Last commit: {last_commit_msg}\n"
+        f"\nCloudflare Status:\n"
+        f"{cf_lines}"
+    )
