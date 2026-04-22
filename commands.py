@@ -1,9 +1,16 @@
 import re
 import subprocess
 import os
+from dotenv import load_dotenv
 from anthropic import Anthropic
 
-anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+load_dotenv()
+
+_api_key = os.getenv("ANTHROPIC_API_KEY")
+if not _api_key:
+    raise EnvironmentError("ANTHROPIC_API_KEY not found in .env")
+
+anthropic = Anthropic(api_key=_api_key)
 
 _COMMAND_PATTERNS = {
     "commit": re.compile(r"\bcommit\b", re.IGNORECASE),

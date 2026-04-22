@@ -111,4 +111,8 @@ atlas/
 \- Phase 2: Always ask confirmation before push/deploy (Y/N)
 
 \- Phase 2.5 (polish): Add "trusted mode" that skips confirmations
+## Notes
+
+\- First test commit via ATLAS voice command
+
 
