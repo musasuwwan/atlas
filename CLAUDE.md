@@ -2,117 +2,101 @@
 
 
 
-\*\*What this is:\*\* Voice-controlled automation assistant for M99 agency.
+Voice-controlled automation assistant for M99 agency.
 
 
 
-\## Current Phase: 2 (MCP-style Integration)
+\## Status: Phase 1+2 Complete ✅
 
 
 
-Phase 1 complete: voice loop working (keyboard input → Claude API → George voice output).
+\### Phase 1: Voice Loop (Complete)
+
+\- Keyboard input → Claude API (Sonnet 4.6) → George voice output
+
+\- Continuous conversation loop
+
+\- ElevenLabs TTS (George voice, British, JARVIS-like)
 
 
 
-\## Phase 2 Goals
+\### Phase 2: Task Automation (Complete)
+
+Three working voice commands:
 
 
 
-Add voice commands that execute real tasks:
+\*\*1. Git Commit\*\* (`atlas commit`)
 
-1\. Git operations: commit + push with AI-generated commit messages
+\- Analyzes git diff
 
-2\. Cloudflare deployments via Wrangler CLI
+\- Generates conventional commit message via Claude API
 
-3\. Status queries: git + deployment status
+\- Asks confirmation
+
+\- Commits + pushes to GitHub
+
+\- Speaks confirmation
 
 
 
-\## Architecture
+\*\*2. Cloudflare Deploy\*\* (`atlas deploy`)
+
+\- Prompts for project name
+
+\- Deploys current directory to Cloudflare Pages via Wrangler
+
+\- Requires manual project creation first: `wrangler pages project create <name>`
+
+\- Speaks deployment confirmation
 
 
 
-Hybrid routing:
+\*\*3. Status\*\* (`atlas status`)
 
-\- If user input matches a command pattern → execute the task (subprocess calls)
+\- Shows git status (branch, uncommitted files, last commit)
 
-\- If user input is general conversation → send to Claude API for chat
+\- Shows last Cloudflare deployment (if any)
 
-\- Always speak confirmation after execution
+\- No confirmation needed, instant response
 
 
 
 \## Stack
 
-
-
 \- Python 3.14
 
-\- Anthropic API (claude-sonnet-4-6) for chat + commit message generation
+\- Anthropic API (claude-sonnet-4-6)
 
-\- ElevenLabs TTS (voice: George, id: JBFqnCBsd6RMkjVDRZzb)
+\- ElevenLabs TTS (George voice)
 
-\- Subprocess for git + wrangler CLI calls
+\- Wrangler CLI (Cloudflare deployments)
 
-
-
-\## File Structure
+\- Git (version control)
 
 
 
-atlas/
+\## Files
 
-├── atlas.py          # Main script
+\- `atlas.py` - Main orchestration loop
 
-├── commands.py       # NEW: Command handlers for Phase 2
+\- `commands.py` - Command detection and execution
 
-├── requirements.txt  # Dependencies
+\- `requirements.txt` - Dependencies
 
-├── .env             # API keys (gitignored)
+\- `.env` - API keys (gitignored)
 
-└── CLAUDE.md        # This file
-
-
-
-\## Coding Style
+\- `CLAUDE.md` - This file (project context)
 
 
 
-\- Concise, no over-commenting
+\## Next Steps (Phase 1.5 + 2.5)
 
-\- Separate command logic into commands.py (keep atlas.py clean)
+\- Real microphone input (Whisper API)
 
-\- Error handling: try/except with spoken error messages
+\- Wake word detection
 
-\- Exit gracefully on Ctrl+C
+\- Auto-create Cloudflare projects
 
-
-
-\## Voice Commands (Phase 2)
-
-
-
-| Command | Action |
-
-|---------|--------|
-
-| "atlas commit" / "atlas, commit this" | git add -A, AI commit message, git commit, git push |
-
-| "atlas deploy" / "atlas, deploy to cloudflare" | wrangler deploy (or pages deploy) |
-
-| "atlas status" | shows git status + last deployment |
-
-
-
-\## Safety
-
-
-
-\- Phase 2: Always ask confirmation before push/deploy (Y/N)
-
-\- Phase 2.5 (polish): Add "trusted mode" that skips confirmations
-## Notes
-
-\- First test commit via ATLAS voice command
-
+\- Trusted mode (skip confirmations)
 
