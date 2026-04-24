@@ -1,4 +1,5 @@
 from anthropic import Anthropic
+from core.audio import speak
 from core.config import ANTHROPIC_API_KEY, AI_MODEL, AI_COMMIT_MAX_TOKENS
 from utils.helpers import safe_subprocess, get_user_confirmation
 
@@ -40,6 +41,9 @@ def run() -> str:
 
     print(f"\n  Proposed: {commit_msg}")
 
+    speak(f"Proposed commit message: {commit_msg}")
+
+    speak("Do you approve this commit message?")
     if not get_user_confirmation("Confirm commit? (yes/no): "):
         return "Commit cancelled."
 
